@@ -1,42 +1,46 @@
-# balance.py
+"""Defines the Balance singleton that tracks the net balance."""
 
+from pattern.observer import ObserverSubject
+from pattern.singleton import Singleton
+from transaction.transaction import Transaction
 from transaction.transaction_category import TransactionCategory
 
-class Balance:
-    """Singleton to track the balance."""
 
-    _instance = None
+class Balance(Singleton, ObserverSubject):
+    """Singleton that tracks the net balance and notifies observers."""
 
     def __init__(self):
-        """Initialize the balance. Prevent direct instantiation."""
-        pass
+        super().__init__()
+        self._balance = 0.0
 
     def reset(self):
-        """Reset the net balance to zero."""
-        pass
+        """Reset the balance to zero."""
+        self._balance = 0.0
 
     def add_income(self, amount):
         """Add income to the balance."""
-        pass
+        self._balance += amount
 
     def add_expense(self, amount):
         """Subtract expense from the balance."""
-        pass
+        self._balance -= amount
 
-    def apply_transaction(self, transaction):
-        """
-        Apply a Transaction object to update the balance.
+    def apply_transaction(self, transaction: Transaction):
+        """Apply a Transaction to the balance, then notify observers.
 
         Args:
-            transaction (Transaction): The transaction to apply.
+            transaction: The transaction to apply.
         """
-        pass
+        if transaction.category == TransactionCategory.INCOME:
+            self.add_income(transaction.amount)
+        else:
+            self.add_expense(transaction.amount)
+        self.notify(self, transaction)
 
     def get_balance(self):
         """Get the current net balance."""
-        pass
+        return self._balance
 
     def summary(self):
         """Return a summary string of the net balance."""
-        pass
-    
+        return f"Net balance: {self.get_balance():.2f}"

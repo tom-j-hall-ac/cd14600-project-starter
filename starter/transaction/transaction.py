@@ -1,16 +1,29 @@
-# transaction.py
+"""Defines the Transaction class."""
 
+from dataclasses import dataclass
+
+from transaction.budget_group import BudgetGroup
 from transaction.transaction_category import TransactionCategory
 
+
+@dataclass
 class Transaction:
-    """Represents a financial transaction with an amount and category."""
+    """Represents a financial transaction.
 
-    def __init__(self, amount, category: TransactionCategory):
-        self.amount = amount
-        self.category = category
+    Attributes:
+        amount: The monetary value of the transaction.
+        reference: A short reference identifying the transaction.
+        detail: A free-text description of the transaction.
+        category: The category the transaction belongs to.
+        budget_group: The budget group the spending is allocated to, or
+            None if it is not assigned to a group (e.g. income).
+    """
 
-    def __str__(self):
-        pass
+    amount: float
+    reference: str
+    detail: str
+    category: TransactionCategory
+    budget_group: BudgetGroup | None = None
 
-    def __eq__(self, other):
-        pass
+    def __str__(self) -> str:
+        return f"{self.category}: {self.amount} {self.reference} {self.detail}"

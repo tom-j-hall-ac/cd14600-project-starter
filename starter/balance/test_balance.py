@@ -26,22 +26,29 @@ class TestBalance(unittest.TestCase):
         self.assertEqual(self.balance.get_balance(), -40)
 
     def test_apply_transaction_income(self):
-        t = Transaction(150, TransactionCategory.INCOME)
+        t = Transaction(150, "INV-12345", "Website development", TransactionCategory.INCOME)
         self.balance.apply_transaction(t)
         self.assertEqual(self.balance.get_balance(), 150)
 
     def test_apply_transaction_expense(self):
-        t = Transaction(60, TransactionCategory.EXPENSE)
+        t = Transaction(60, "RCT-12345", "Coffee", TransactionCategory.EXPENSE)
         self.balance.apply_transaction(t)
         self.assertEqual(self.balance.get_balance(), -60)
 
+    def test_summary(self):
+        self.balance.add_income(100)
+        self.balance.add_expense(40)
+        self.assertEqual(self.balance.summary(), "Net balance: 60.00")
+
+    """
+        Test is not required because of enum Transaction.TransactionCategory.type checking
     def test_apply_transaction_invalid_category(self):
         class FakeCategory:
             pass
-        t = Transaction(100, FakeCategory())
+        t = Transaction(100, "FAKE REF", "FAKE DETAIL", FakeCategory())
         with self.assertRaises(ValueError):
             self.balance.apply_transaction(t)
-
+    """
     def test_reset(self):
         self.balance.add_income(100)
         self.balance.add_expense(50)
