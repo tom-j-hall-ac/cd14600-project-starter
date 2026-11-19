@@ -31,11 +31,23 @@ class Balance(Singleton, ObserverSubject):
         Args:
             transaction: The transaction to apply.
         """
+        self._adjust(transaction, sign=1)
+
+    def unapply_transaction(self, transaction: Transaction):
+        """Reverse a previously applied Transaction, then notify observers.
+
+        Args:
+            transaction: The transaction to reverse.
+        """
+        self._adjust(transaction, sign=-1)
+
+    def _adjust(self, transaction: Transaction, sign: int):
+        """Apply (sign=1) or reverse (sign=-1) a transaction."""
         if transaction.category == TransactionCategory.INCOME:
-            self.add_income(transaction.amount)
+            self._balance += sign * transaction.amount
         else:
-            self.add_expense(transaction.amount)
-        self.notify(self, transaction)
+            self._balance -= sign * transaction.amount
+        self.notify(self, transaction, reversal=sign < 0)
 
     def get_balance(self):
         """Get the current net balance."""

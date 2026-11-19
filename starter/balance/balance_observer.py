@@ -17,14 +17,30 @@ class BalanceObserver(Observer):
     """Interface for objects that want to be told about balance updates."""
 
     @abstractmethod
-    def update(self, balance: Balance, transaction: Transaction):
-        """Handle a balance update caused by a transaction."""
+    def update(
+        self,
+        balance: Balance,
+        transaction: Transaction,
+        reversal: bool = False,
+    ):
+        """Handle a balance update caused by a transaction.
+
+        Args:
+            balance: The balance that changed.
+            transaction: The transaction that was processed.
+            reversal: True if the transaction was unapplied.
+        """
 
 
 class PrintObserver(BalanceObserver):
     """Prints the balance summary after every transaction."""
 
-    def update(self, balance: Balance, transaction: Transaction):
+    def update(
+        self,
+        balance: Balance,
+        transaction: Transaction,
+        reversal: bool = False,
+    ):
         print(balance.summary())
 
 
@@ -43,7 +59,12 @@ class LowBalanceAlertObserver(BalanceObserver):
         self.threshold = threshold
         self.low_balance_alert = None
 
-    def update(self, balance: Balance, transaction: Transaction):
+    def update(
+        self,
+        balance: Balance,
+        transaction: Transaction,
+        reversal: bool = False,
+    ):
         if balance.get_balance() < self.threshold:
             self.low_balance_alert = LowBalanceAlert(balance, transaction)
         else:
