@@ -47,8 +47,10 @@ python -m unittest balance.test_balance.TestBalance.test_summary
 
 ### Break Down Tests
 
-- balance/test_balance.py → Verifies the Singleton Balance class, including applying and summarising transactions.
-- balance/test_balance_observer.py → Validates that low-balance alerts are triggered at the correct threshold.
+- balance/test_balance.py → Verifies the Singleton Balance class (accessor and direct construction return one object that keeps its state), plus applying and summarising transactions.
+- balance/test_balance_observer.py → Validates low-balance alerts (including exactly at the threshold, and when the alert and recovery callbacks fire) and the printed output of the print observer.
+- pattern/test_singleton.py → Verifies the Singleton base class and metaclass.
+- test_main.py → Runs the demo and checks the balance is printed after every transaction, the warning appears when the balance dips below 50, and recovery is announced later.
 - balance/test_balance_ledger_observer.py → Checks that processed and reversed transactions are recorded in the Ledger.
 - transaction/test_transaction.py → Covers creating, printing and comparing transactions.
 - transaction/test_transaction_adapter.py → Ensures external income data is correctly adapted into Transaction objects.
@@ -76,7 +78,7 @@ starter/
 
 | Pattern | Where | Role |
 | --- | --- | --- |
-| Singleton | `Balance`, `Ledger` (via `pattern/singleton.py`) | One shared balance and one shared ledger |
+| Singleton | `Balance`, `Ledger` (via `SingletonMeta` in `pattern/singleton.py`) | One shared balance and one shared ledger, even when the class is constructed directly |
 | Adapter | `TransactionAdapter` | Converts `ExternalFreelanceIncome` into a `Transaction` |
 | Observer | `Balance` notifies `PrintObserver`, `LowBalanceAlertObserver`, `BalanceLedgerObserver` | React to balance changes |
 | Command | `Apply`, `Unapply`, `Import` extend `Command`; `TransactionProcessor` is the invoker; `Balance` is the receiver | Run and undo transactions |
@@ -116,7 +118,7 @@ Singleton, Adapter, Observer, Command and Strategy.
 
 ### How each improved the design
 
-- **Singleton:** `Balance` and `Ledger` each have one shared instance, so every part of the program sees the same balance and the same record of transactions.
+- **Singleton:** `Balance` and `Ledger` each have one shared instance, so every part of the program sees the same balance and the same record of transactions. A metaclass enforces this, so `Balance()` and `Balance.get_instance()` return the same object and `__init__` never runs twice to reset state.
 - **Adapter:** `TransactionAdapter` keeps the external freelance format out of the core code. `Balance` only ever handles `Transaction` objects.
 - **Observer:** `Balance` does not know who is listening. Printing, low-balance alerts and ledger recording are separate observers that can be added or removed without changing `Balance`.
 - **Command:** Apply, unapply and import are objects with `execute()` and `undo()`. The processor can run them, keep a history and undo the last one, and `main.py` no longer contains balance logic.
@@ -125,7 +127,7 @@ Singleton, Adapter, Observer, Command and Strategy.
 ### Trade-offs encountered
 
 - **Circular imports:** Observers need `Balance` for type hints, and `Balance` needs the observer base class. I moved the base class to `pattern/observer.py` and imported `Balance` only under `TYPE_CHECKING`.
-- **Singleton and tests:** A shared instance keeps state between tests, so tests reset the `Balance` and `Ledger` first. It also made observers pile up on `Balance`, which the ledger observer tests clear by reaching into a private attribute.
+- **Singleton and tests:** A shared instance keeps state between tests, so tests reset the `Balance` and `Ledger` first. It also made observers pile up on `Balance`, which the tests clear with `clear_observers()`.
 - **Reversals:** Unapply and undo notify observers too. Passing a `reversal` flag stopped the ledger from recording a duplicate, but it changed the observer `update` signature for every observer.
 - **More classes:** Command and Strategy add several small files and some indirection for a small program. In return each class has one job and is easy to test.
 - **Simple budget rules:** Keyword matching and fixed default percentages are easy to follow and change, but they are less accurate than explicit budget groups or user-set amounts.

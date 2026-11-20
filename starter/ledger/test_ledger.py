@@ -16,6 +16,15 @@ class TestLedger(unittest.TestCase):
     def test_singleton_instance(self):
         self.assertIs(Ledger.get_instance(), Ledger.get_instance())
 
+    def test_direct_construction_returns_accessor_instance(self):
+        self.assertIs(Ledger(), Ledger.get_instance())
+
+    def test_repeated_construction_keeps_entries(self):
+        self.ledger.record(self.transaction)
+        Ledger()
+        Ledger.get_instance()
+        self.assertEqual(len(Ledger()), 1)
+
     def test_starts_empty(self):
         self.assertEqual(len(self.ledger), 0)
         self.assertEqual(self.ledger.entries, ())

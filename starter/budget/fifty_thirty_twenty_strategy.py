@@ -42,4 +42,7 @@ class FiftyThirtyTwentyStrategy(BudgetStrategy):
         unallocated = round(
             summary.income - sum(line.planned for line in lines), 2
         )
-        return BudgetPlan("50/30/20 Budget", summary.income, lines, unallocated)
+        return BudgetPlan(
+            "50/30/20 Budget", summary.income, lines, unallocated,
+            round(summary.uncategorised, 2),
+        )

@@ -37,7 +37,8 @@ class TestZeroBasedStrategy(unittest.TestCase):
     def test_every_dollar_is_allocated_by_default(self):
         plan = ZeroBasedStrategy().create_plan(make_summary(3333.33))
         self.assertEqual(len(plan.lines), len(BudgetGroup))
-        self.assertAlmostEqual(sum(l.planned for l in plan.lines), 3333.33)
+        total = sum(line.planned for line in plan.lines)
+        self.assertAlmostEqual(total, 3333.33)
         self.assertEqual(plan.unallocated, 0)
 
     def test_actuals_come_from_summary(self):
@@ -78,6 +79,23 @@ class TestBudgetPlanner(unittest.TestCase):
         self.assertIn("Needs (50%)", text)
         self.assertIn("2500.00", text)
         self.assertIn("Unallocated: 0.00", text)
+
+    def test_render_shows_uncategorised_spending(self):
+        summary = make_summary()
+        summary.uncategorised = 80
+        for strategy in (FiftyThirtyTwentyStrategy(), ZeroBasedStrategy()):
+            text = BudgetPlanner(strategy).render(summary)
+            self.assertIn("Uncategorised spending: 80.00", text)
+
+    def test_plans_carry_uncategorised_spending(self):
+        summary = make_summary()
+        summary.uncategorised = 80
+        for strategy in (FiftyThirtyTwentyStrategy(), ZeroBasedStrategy()):
+            self.assertEqual(strategy.create_plan(summary).uncategorised, 80)
+
+    def test_render_shows_zero_uncategorised_when_none(self):
+        text = BudgetPlanner(ZeroBasedStrategy()).render(make_summary())
+        self.assertIn("Uncategorised spending: 0.00", text)
 
 
 if __name__ == "__main__":

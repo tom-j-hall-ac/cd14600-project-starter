@@ -32,9 +32,11 @@ class BudgetPlan:
         income: The income being budgeted.
         lines: The planned lines of the budget.
         unallocated: Income not assigned to any line.
+        uncategorised: Spending that matched no budget group.
     """
 
     title: str
     income: float
     lines: tuple[BudgetLine, ...] = field(default_factory=tuple)
     unallocated: float = 0.0
+    uncategorised: float = 0.0

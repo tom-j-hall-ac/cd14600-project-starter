@@ -33,6 +33,7 @@ class BudgetPlanner:
             for line in plan.lines
         ]
         rows.append(f"Unallocated: {plan.unallocated:.2f}")
+        rows.append(f"Uncategorised spending: {plan.uncategorised:.2f}")
         return "\n".join(rows)
 
     def print_plan(self, summary: BudgetSummary):

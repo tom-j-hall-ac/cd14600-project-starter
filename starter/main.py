@@ -2,7 +2,7 @@
 
 from balance.balance import Balance
 from balance.balance_ledger_observer import BalanceLedgerObserver
-from balance.balance_observer import LowBalanceAlertObserver
+from balance.balance_observer import LowBalanceAlertObserver, PrintObserver
 from budget.budget_planner import BudgetPlanner
 from budget.budget_processor import BudgetProcessor
 from budget.fifty_thirty_twenty_strategy import FiftyThirtyTwentyStrategy
@@ -15,29 +15,74 @@ from transaction.transaction import Transaction
 from transaction.transaction_category import TransactionCategory
 from transaction.transaction_processor import TransactionProcessor
 
-INCOME = TransactionCategory.INCOME
-EXPENSE = TransactionCategory.EXPENSE
+LOW_BALANCE_THRESHOLD = 50
+
+
+def income(amount, reference, detail):
+    """Create an income transaction."""
+    return Transaction(amount, reference, detail, TransactionCategory.INCOME)
+
+
+def expense(amount, reference, detail):
+    """Create an expense transaction."""
+    return Transaction(amount, reference, detail, TransactionCategory.EXPENSE)
+
+
+def warn_low_balance(alert):
+    """Print a warning as soon as the balance drops below the threshold."""
+    print(
+        f"  WARNING: balance ${alert.balance.get_balance():.2f} is below "
+        f"the {LOW_BALANCE_THRESHOLD} alert threshold."
+    )
+
+
+def announce_recovery(balance):
+    """Print a message as soon as the balance is back above the threshold."""
+    print(
+        f"  Balance recovered: ${balance.get_balance():.2f} is back above "
+        f"the {LOW_BALANCE_THRESHOLD} alert threshold."
+    )
+
+
+def register_observers(balance: Balance):
+    """Subscribe the observers before any transaction is processed."""
+    balance.register_observer(PrintObserver())
+    balance.register_observer(BalanceLedgerObserver())
+    balance.register_observer(
+        LowBalanceAlertObserver(
+            LOW_BALANCE_THRESHOLD,
+            on_alert=warn_low_balance,
+            on_recover=announce_recovery,
+        )
+    )
 
 
 def process_transactions(balance: Balance):
-    """Process a month of transactions through the TransactionProcessor."""
-    wrong_payment = Transaction(90, "RCT-009", "Dining out (duplicate)", EXPENSE)
+    """Process a month of transactions through the TransactionProcessor.
+
+    The emergency fund top-up drops the balance below the alert threshold,
+    and the imported freelance income later brings it back above.
+    """
+    duplicate_payment = expense(90, "RCT-009", "Dining out (duplicate)")
     freelance_income = ExternalFreelanceIncome(
         1200, "INV-98765", "Mobile App Project"
     )
     processor = TransactionProcessor()
     processor.process_all([
-        Apply(balance, Transaction(4000, "PAY-001", "Salary", INCOME)),
+        Apply(balance, income(4000, "PAY-001", "Salary")),
+        Apply(balance, expense(1300, "RCT-001", "Monthly rent")),
+        Apply(balance, expense(420, "RCT-002", "Groceries")),
+        Apply(balance, expense(160, "RCT-003", "Electricity")),
+        Apply(balance, expense(95, "RCT-004", "Dining out")),
+        Apply(balance, expense(400, "RCT-005", "Weekend travel")),
+        Apply(balance, expense(26, "RCT-006", "Streaming")),
+        Apply(balance, expense(300, "RCT-007", "Pension")),
+        Apply(balance, expense(1260, "RCT-008", "Emergency fund top-up")),
+        Apply(balance, duplicate_payment),
+        Unapply(balance, duplicate_payment),
         Import(balance, freelance_income),
-        Apply(balance, Transaction(1300, "RCT-001", "Monthly rent", EXPENSE)),
-        Apply(balance, Transaction(420, "RCT-002", "Groceries", EXPENSE)),
-        Apply(balance, Transaction(160, "RCT-003", "Electricity", EXPENSE)),
-        Apply(balance, Transaction(95, "RCT-004", "Dining out", EXPENSE)),
-        Apply(balance, Transaction(400, "RCT-005", "Weekend travel", EXPENSE)),
-        Apply(balance, Transaction(26, "RCT-006", "Streaming", EXPENSE)),
-        Apply(balance, Transaction(300, "RCT-007", "Pension", EXPENSE)),
-        Apply(balance, wrong_payment),
-        Unapply(balance, wrong_payment),
+        Apply(balance, expense(30, "RCT-006", "Car")),
+        Apply(balance, expense(50, "RCT-006", "Plane")),
     ])
 
 
@@ -55,14 +100,8 @@ def main():
     print("Adding transactions...")
 
     balance = Balance.get_instance()
-    balance.register_observer(BalanceLedgerObserver())
-    low_balance_observer = LowBalanceAlertObserver(threshold=50)
-    balance.register_observer(low_balance_observer)
-
+    register_observers(balance)
     process_transactions(balance)
-    print(balance.summary())
-    if low_balance_observer.alert_triggered():
-        print("Warning: balance is below the alert threshold.")
 
     print()
     print_budgets()

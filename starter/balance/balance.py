@@ -55,4 +55,4 @@ class Balance(Singleton, ObserverSubject):
 
     def summary(self):
         """Return a summary string of the net balance."""
-        return f"Net balance: {self.get_balance():.2f}"
+        return f"Net balance: ${self.get_balance():>9.2f}"

@@ -6,12 +6,16 @@ from transaction.budget_group import BudgetGroup
 from transaction.transaction import Transaction
 from transaction.transaction_category import TransactionCategory
 
+INCOME = TransactionCategory.INCOME
+EXPENSE = TransactionCategory.EXPENSE
+
 # Fictitious monthly spending, one entry per budget group.
 FICTITIOUS_SPENDING = {
     BudgetGroup.HOUSING: (1200.00, "RENT-01", "Monthly rent"),
     BudgetGroup.GROCERIES: (350.50, "GRO-01", "Weekly shop"),
     BudgetGroup.UTILITIES: (180.25, "UTL-01", "Electricity and water"),
-    BudgetGroup.MINIMUM_DEBT_PAYMENTS: (150.00, "DEBT-01", "Credit card minimum"),
+    BudgetGroup.MINIMUM_DEBT_PAYMENTS: (
+        150.00, "DEBT-01", "Credit card minimum"),
     BudgetGroup.DINING_OUT: (95.00, "DIN-01", "Restaurant"),
     BudgetGroup.TRAVEL: (400.00, "TRV-01", "Weekend train trip"),
     BudgetGroup.HOBBIES: (60.00, "HOB-01", "Climbing gym"),
@@ -40,19 +44,20 @@ class TestBudgetGroup(unittest.TestCase):
         })
 
     def test_transaction_holds_budget_group(self):
-        t = Transaction(50, "REF", "Detail", TransactionCategory.EXPENSE, BudgetGroup.GROCERIES)
-        self.assertEqual(t.budget_group, BudgetGroup.GROCERIES)
+        transaction = Transaction(
+            50, "REF", "Detail", EXPENSE, BudgetGroup.GROCERIES)
+        self.assertEqual(transaction.budget_group, BudgetGroup.GROCERIES)
 
     def test_budget_group_defaults_to_none(self):
-        t = Transaction(50, "REF", "Detail", TransactionCategory.INCOME)
-        self.assertIsNone(t.budget_group)
+        transaction = Transaction(50, "REF", "Detail", INCOME)
+        self.assertIsNone(transaction.budget_group)
 
     def test_budget_group_affects_equality(self):
-        t1 = Transaction(10, "REF", "Detail", TransactionCategory.EXPENSE, BudgetGroup.TRAVEL)
-        t2 = Transaction(10, "REF", "Detail", TransactionCategory.EXPENSE, BudgetGroup.TRAVEL)
-        t3 = Transaction(10, "REF", "Detail", TransactionCategory.EXPENSE, BudgetGroup.HOBBIES)
-        self.assertEqual(t1, t2)
-        self.assertNotEqual(t1, t3)
+        trip1 = Transaction(10, "REF", "Detail", EXPENSE, BudgetGroup.TRAVEL)
+        trip2 = Transaction(10, "REF", "Detail", EXPENSE, BudgetGroup.TRAVEL)
+        hobby = Transaction(10, "REF", "Detail", EXPENSE, BudgetGroup.HOBBIES)
+        self.assertEqual(trip1, trip2)
+        self.assertNotEqual(trip1, hobby)
 
 
 class TestFictitiousSpending(unittest.TestCase):

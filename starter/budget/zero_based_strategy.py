@@ -49,7 +49,10 @@ class ZeroBasedStrategy(BudgetStrategy):
             for group in BudgetGroup
         )
         unallocated = round(summary.income - sum(planned.values()), 2)
-        return BudgetPlan("Zero-Based Budget", summary.income, lines, unallocated)
+        return BudgetPlan(
+            "Zero-Based Budget", summary.income, lines, unallocated,
+            round(summary.uncategorised, 2),
+        )
 
     @staticmethod
     def _by_percentage(income: float) -> dict[BudgetGroup, float]:

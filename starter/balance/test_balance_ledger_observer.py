@@ -14,7 +14,7 @@ class TestBalanceLedgerObserver(unittest.TestCase):
     def setUp(self):
         self.balance = Balance.get_instance()
         self.balance.reset()
-        self.balance._observers.clear()
+        self.balance.clear_observers()
         self.ledger = Ledger.get_instance()
         self.ledger.reset()
         self.balance.register_observer(BalanceLedgerObserver())
@@ -24,7 +24,7 @@ class TestBalanceLedgerObserver(unittest.TestCase):
             30, "RCT-1", "Coffee", TransactionCategory.EXPENSE)
 
     def tearDown(self):
-        self.balance._observers.clear()
+        self.balance.clear_observers()
 
     def test_uses_ledger_singleton_by_default(self):
         self.assertIs(BalanceLedgerObserver().ledger, self.ledger)

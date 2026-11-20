@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
+"""Re-exports Command so it can be imported from the pattern package."""
 
-class Command(ABC):
-        @abstractmethod
-        def execute(self):
-            pass
+from command.command import Command
+
+__all__ = ["Command"]
